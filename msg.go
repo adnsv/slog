@@ -13,121 +13,191 @@ type Sink = func(timestamp time.Time, lvl Level, domain string, msg []byte)
 // RootSink is the currently active Sink there all the messages will go
 var RootSink Sink = DecoratedSink(os.Stderr, BracketedDecorator(TSTime|TSMicroseconds))
 
-// Stop should be called at the end of the application to emit the last EOL
+var (
+	currTime   = time.Time{}
+	currLevel  = stopped
+	currDomain = ""
+	eol        = []byte{'\n'}
+)
+
+// CurrentLevel returns the current logging level
+func CurrentLevel() Level {
+	return currLevel
+}
+
+// CurrentDomain returns the current logging domain
+func CurrentDomain() string {
+	return currDomain
+}
+
+// Stop finalizes the last logging entry and disables further logging.
+// Normally, this means writing a pending EOL into the output sink.
+// This function must be called at the end of the application
 func Stop() {
-	if RootSink != nil {
-		RootSink(time.Now(), stopLevel, "", nil)
+	if currLevel != stopped && RootSink != nil {
+		RootSink(currTime, currLevel, currDomain, eol)
+	}
+	currLevel = stopped
+}
+
+// StartLevel starts a new line that targets the specified logging level and domain
+func StartLevel(lvl Level, domain string) {
+	Stop()
+	currTime = time.Now()
+	currLevel = lvl
+	currDomain = domain
+}
+
+// WantLevel starts a new level/domain line if it differs from the current
+func WantLevel(lvl Level, domain string) {
+	if currLevel != lvl || currDomain != domain {
+		Stop()
+		currTime = time.Now()
+		currLevel = lvl
+		currDomain = domain
 	}
 }
 
-func levelMsg(lvl Level, domain string, msg string) {
-	if RootSink != nil {
-		RootSink(time.Now(), lvl, domain, []byte(msg))
+func Append(msg []byte) {
+	if currLevel != stopped && RootSink != nil {
+		RootSink(currTime, currLevel, currDomain, msg)
 	}
+}
+
+func AppendStr(s string) {
+	Append([]byte(s))
+}
+
+func Print(a ...interface{}) {
+	AppendStr(fmt.Sprint(a...))
+}
+
+func Printf(format string, a ...interface{}) {
+	AppendStr(fmt.Sprintf(format, a...))
 }
 
 // common logging functions
 
 func Trace(a ...interface{}) {
-	levelMsg(TraceLevel, "", fmt.Sprint(a...))
+	StartLevel(TraceLevel, "")
+	Print(a...)
 }
 
 func Tracef(format string, a ...interface{}) {
-	levelMsg(TraceLevel, "", fmt.Sprintf(format, a...))
+	StartLevel(TraceLevel, "")
+	Printf(format, a...)
 }
 
 func Debug(a ...interface{}) {
-	levelMsg(DebugLevel, "", fmt.Sprint(a...))
+	StartLevel(DebugLevel, "")
+	Print(a...)
 }
 
 func Debugf(format string, a ...interface{}) {
-	levelMsg(DebugLevel, "", fmt.Sprintf(format, a...))
+	StartLevel(DebugLevel, "")
+	Printf(format, a...)
 }
 
 func Info(a ...interface{}) {
-	levelMsg(InfoLevel, "", fmt.Sprint(a...))
+	StartLevel(InfoLevel, "")
+	Print(a...)
 }
 
 func Infof(format string, a ...interface{}) {
-	levelMsg(InfoLevel, "", fmt.Sprintf(format, a...))
+	StartLevel(InfoLevel, "")
+	Printf(format, a...)
 }
 
 func Warn(a ...interface{}) {
-	levelMsg(WarnLevel, "", fmt.Sprint(a...))
+	StartLevel(WarnLevel, "")
+	Print(a...)
 }
 
 func Warnf(format string, a ...interface{}) {
-	levelMsg(WarnLevel, "", fmt.Sprintf(format, a...))
+	StartLevel(WarnLevel, "")
+	Printf(format, a...)
 }
 
 func Error(a ...interface{}) {
-	levelMsg(ErrorLevel, "", fmt.Sprint(a...))
+	StartLevel(ErrorLevel, "")
+	Print(a...)
 }
 
 func Errorf(format string, a ...interface{}) {
-	levelMsg(ErrorLevel, "", fmt.Sprintf(format, a...))
+	StartLevel(ErrorLevel, "")
+	Printf(format, a...)
 }
 
 func Fatal(a ...interface{}) {
-	levelMsg(FatalLevel, "", fmt.Sprint(a...))
-	Stop()
+	StartLevel(FatalLevel, "")
+	Print(a...)
 }
 
 func Fatalf(format string, a ...interface{}) {
-	levelMsg(FatalLevel, "", fmt.Sprintf(format, a...))
-	Stop()
+	StartLevel(FatalLevel, "")
+	Printf(format, a...)
 }
 
 // logging with domain
 
 func DomainTrace(domain string, a ...interface{}) {
-	levelMsg(TraceLevel, domain, fmt.Sprint(a...))
+	StartLevel(TraceLevel, domain)
+	Print(a...)
 }
 
 func DomainTracef(domain string, format string, a ...interface{}) {
-	levelMsg(TraceLevel, domain, fmt.Sprintf(format, a...))
+	StartLevel(TraceLevel, domain)
+	Printf(format, a...)
 }
 
 func DomainDebug(domain string, a ...interface{}) {
-	levelMsg(DebugLevel, domain, fmt.Sprint(a...))
+	StartLevel(DebugLevel, domain)
+	Print(a...)
 }
 
 func DomainDebugf(domain string, format string, a ...interface{}) {
-	levelMsg(DebugLevel, domain, fmt.Sprintf(format, a...))
+	StartLevel(DebugLevel, domain)
+	Printf(format, a...)
 }
 
 func DomainInfo(domain string, a ...interface{}) {
-	levelMsg(InfoLevel, domain, fmt.Sprint(a...))
+	StartLevel(InfoLevel, domain)
+	Print(a...)
 }
 
 func DomainInfof(domain string, format string, a ...interface{}) {
-	levelMsg(InfoLevel, domain, fmt.Sprintf(format, a...))
+	StartLevel(InfoLevel, domain)
+	Printf(format, a...)
 }
 
 func DomainWarn(domain string, a ...interface{}) {
-	levelMsg(WarnLevel, domain, fmt.Sprint(a...))
+	StartLevel(WarnLevel, domain)
+	Print(a...)
 }
 
 func DomainWarnf(domain string, format string, a ...interface{}) {
-	levelMsg(WarnLevel, domain, fmt.Sprintf(format, a...))
+	StartLevel(WarnLevel, domain)
+	Printf(format, a...)
 }
 
 func DomainError(domain string, a ...interface{}) {
-	levelMsg(ErrorLevel, domain, fmt.Sprint(a...))
+	StartLevel(ErrorLevel, domain)
+	Print(a...)
 }
 
 func DomainErrorf(domain string, format string, a ...interface{}) {
-	levelMsg(ErrorLevel, domain, fmt.Sprintf(format, a...))
+	StartLevel(ErrorLevel, domain)
+	Printf(format, a...)
 }
 
 func DomainFatal(domain string, a ...interface{}) {
-	levelMsg(FatalLevel, domain, fmt.Sprint(a...))
-	Stop()
+	StartLevel(FatalLevel, domain)
+	Print(a...)
 }
 
 func DomainFatalf(domain string, format string, a ...interface{}) {
-	levelMsg(FatalLevel, domain, fmt.Sprintf(format, a...))
-	Stop()
+	StartLevel(FatalLevel, domain)
+	Printf(format, a...)
 }
 
 // stream adapters
@@ -142,41 +212,44 @@ func (fw funcWriterAdapter) Write(p []byte) (n int, err error) {
 	return
 }
 
-// levelWriter produces an io.Writer that can be used for streaming
+// LevelWriter produces an io.Writer that can be used for streaming
 // into logs
-func levelWriter(lvl Level, domain string) io.Writer {
-	if RootSink != nil {
-		RootSink(time.Now(), lvl, domain, nil)
-	}
+func LevelWriter(lvl Level, domain string) io.Writer {
+	StartLevel(lvl, domain)
+	return funcWriterAdapter(Append)
+}
 
-	f := func(p []byte) {
-		if RootSink != nil {
-			RootSink(time.Now(), ContinueLevel, domain, p)
-		}
-	}
-	return funcWriterAdapter(f)
+// Writer produces an io.Writer that appends to the current level
+func Writer() io.Writer {
+	return funcWriterAdapter(Append)
 }
 
 func TraceWriter(domain string) io.Writer {
-	return levelWriter(TraceLevel, domain)
+	StartLevel(TraceLevel, domain)
+	return Writer()
 }
 
 func DebugWriter(domain string) io.Writer {
-	return levelWriter(DebugLevel, domain)
+	StartLevel(DebugLevel, domain)
+	return Writer()
 }
 
 func InfoWriter(domain string) io.Writer {
-	return levelWriter(InfoLevel, domain)
+	StartLevel(InfoLevel, domain)
+	return Writer()
 }
 
 func WarnWriter(domain string) io.Writer {
-	return levelWriter(WarnLevel, domain)
+	StartLevel(WarnLevel, domain)
+	return Writer()
 }
 
 func ErrorWriter(domain string) io.Writer {
-	return levelWriter(ErrorLevel, domain)
+	StartLevel(ErrorLevel, domain)
+	return Writer()
 }
 
 func FatalWriter(domain string) io.Writer {
-	return levelWriter(FatalLevel, domain)
+	StartLevel(FatalLevel, domain)
+	return Writer()
 }

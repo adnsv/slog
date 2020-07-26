@@ -109,14 +109,14 @@ func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string,
 
 type cpair struct{ fg, bg ansi.Index }
 
-var cptime = cpair{fg: ansi.Gray(96), bg: ansi.Gray(48)}
+var cptime = cpair{fg: ansi.Gray(128), bg: ansi.Gray(48)}
 var cpdomain = cpair{fg: ansi.Gray(192), bg: ansi.RGB(64, 64, 96)}
 
 var cplevel = map[Level]cpair{
 	TraceLevel: cpair{fg: ansi.Gray(96), bg: ansi.RGB(32, 32, 48)},
 	DebugLevel: cpair{fg: ansi.Gray(96), bg: ansi.RGB(72, 32, 64)},
-	InfoLevel:  cpair{fg: ansi.Gray(255), bg: ansi.RGB(64, 64, 128)},
-	WarnLevel:  cpair{fg: ansi.White, bg: ansi.RGB(128, 128, 64)},
-	ErrorLevel: cpair{fg: ansi.White, bg: ansi.RGB(128, 64, 64)},
-	FatalLevel: cpair{fg: ansi.White, bg: ansi.RGB(64, 192, 64)},
+	InfoLevel:  cpair{fg: ansi.Gray(240), bg: ansi.RGB(64, 64, 128)},
+	WarnLevel:  cpair{fg: ansi.Gray(240), bg: ansi.RGB(128, 128, 64)},
+	ErrorLevel: cpair{fg: ansi.Gray(240), bg: ansi.RGB(128, 64, 64)},
+	FatalLevel: cpair{fg: ansi.Gray(240), bg: ansi.RGB(64, 192, 64)},
 }

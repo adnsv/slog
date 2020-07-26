@@ -8,41 +8,24 @@ import (
 // PlainSink is a simple pass-through message formatter that outputs
 // content as-is
 func PlainSink(target io.Writer) Sink {
-	currlvl := ContinueLevel
 	return func(ts time.Time, lvl Level, prefix string, msg []byte) {
-		if lvl == stopLevel {
-			if currlvl != ContinueLevel {
-				target.Write([]byte{'\n'})
-			}
-			currlvl = ContinueLevel
-		} else if lvl != ContinueLevel {
-			if currlvl != ContinueLevel {
-				target.Write([]byte{'\n'})
-			}
-			currlvl = lvl
-		}
-		if len(msg) > 0 {
-			target.Write(msg)
-		}
+		target.Write(msg)
 	}
 }
 
-// DecoratedSink provides an opportunity to add timestamp, level, domain to the output
+// DecoratedSink provides adds timestamp, level, and domain to the output
 func DecoratedSink(target io.Writer, decor DecorProvider) Sink {
-	currlvl := ContinueLevel
-	currdomain := ""
-	currts := time.Now()
 
 	prefixer := func(ts time.Time, domain string) []byte {
-		if currlvl != ContinueLevel && decor != nil {
-			return decor(ts, currlvl, domain, true)
+		if currLevel != stopped && decor != nil {
+			return decor(ts, currLevel, domain, true)
 		}
 		return nil
 	}
 
 	postfixer := func(ts time.Time, domain string) []byte {
-		if currlvl != ContinueLevel && decor != nil {
-			return decor(ts, currlvl, domain, false)
+		if currLevel != stopped && decor != nil {
+			return decor(ts, currLevel, domain, false)
 		}
 		return nil
 	}
@@ -58,21 +41,8 @@ func DecoratedSink(target io.Writer, decor DecorProvider) Sink {
 		})
 
 	return func(ts time.Time, lvl Level, domain string, msg []byte) {
-		if lvl == stopLevel {
-			if currlvl != ContinueLevel {
-				ld(currts, currdomain, []byte{'\n'})
-			}
-			currlvl = ContinueLevel
-		} else if lvl != ContinueLevel {
-			if currlvl != ContinueLevel {
-				ld(currts, currdomain, []byte{'\n'})
-			}
-			currlvl = lvl
-		}
-		currts = ts
-		currdomain = domain
 		if len(msg) > 0 {
-			ld(ts, currdomain, msg)
+			ld(ts, currDomain, msg)
 		}
 	}
 }

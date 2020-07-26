@@ -16,13 +16,14 @@ func RGB(r, g, b byte) Index {
 }
 
 func Gray(l byte) Index {
-	v := (uint32(l)*26 + 128) >> 8
+	v := (uint32(l)*25 + 128) >> 8
 	if v == 0 {
 		return Black
-	} else if v == 26 {
+	} else if v == 25 {
 		return White
 	}
-	return Index(v + 231)
+	v += 231
+	return Index(v)
 }
 
 const ResetSeq = "\x1b[0m"

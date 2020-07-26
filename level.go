@@ -5,14 +5,17 @@ type Level int
 
 // Supported Level values
 const (
-	stopLevel     = Level(-1)
-	ContinueLevel = Level(iota) // keep appending to last level
-	TraceLevel
+	TraceLevel = Level(iota + 1)
 	DebugLevel
 	InfoLevel
 	WarnLevel
 	ErrorLevel
 	FatalLevel
+)
+
+// internals
+const (
+	stopped = Level(0) // no level
 )
 
 // LevelNames is a map of default level names

@@ -16,6 +16,7 @@ const (
 // internals
 const (
 	stopped = Level(0) // no level
+	
 )
 
 // LevelNames is a map of default level names

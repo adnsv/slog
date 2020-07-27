@@ -5,15 +5,15 @@ type Progresser interface {
 	Done(msg string)
 }
 
-type runeBar struct {
-	maxPos     int64
-	showingPos int64 // [0..total]
-	showingStr string
-}
-
 func IncrementalProgressIndicator(maxPos int64) Progresser {
 	rb := &runeBar{maxPos: maxPos}
 	return rb
+}
+
+type runeBar struct {
+	maxPos     int64
+	showingPos int64 // [0..maxPos]
+	showingStr string
 }
 
 const countdownStr = "9:.:8:.:7:.:6:.:5:.:4:.:3:.:2:.:1:.:0"

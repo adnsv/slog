@@ -7,7 +7,7 @@ type FilterOpts struct {
 	Debug bool
 }
 
-func Filter(opts FilterOpts, target Sink) Sink {
+func Filter(opts *FilterOpts, target Sink) Sink {
 	return func(ts time.Time, lvl Level, prefix string, msg []byte) {
 		allow := true
 		switch lvl {

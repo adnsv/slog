@@ -8,7 +8,7 @@ import (
 )
 
 // Sink is a core logging callback
-type Sink = func(timestamp time.Time, lvl Level, domain string, msg []byte)
+type Sink = func(timestamp time.Time, lvl Level, domains []string, msg []byte)
 
 // RootSink is the currently active Sink there all the messages will go
 var RootSink Sink = DecoratedSink(os.Stderr, BracketedDecorator(TSTime|TSMicroseconds))
@@ -18,6 +18,7 @@ var (
 	currLevel  = stopped
 	currDomain = ""
 	eol        = []byte{'\n'}
+	domains    []string
 )
 
 // CurrentLevel returns the current logging level
@@ -30,12 +31,32 @@ func CurrentDomain() string {
 	return currDomain
 }
 
+// PushDomain pushes a domain into the domain chain
+func PushDomain(s string) {
+	domains = append(domains, s)
+}
+
+// PopDomain removes the last item from the domain chain
+func PopDomain() {
+	n := len(domains)
+	if n > 0 {
+		domains = domains[:n-1]
+	}
+}
+
+func domainChain() []string {
+	if currDomain == "" {
+		return domains
+	}
+	return append(domains, currDomain)
+}
+
 // Stop finalizes the last logging entry and disables further logging.
 // Normally, this means writing a pending EOL into the output sink.
 // This function must be called at the end of the application
 func Stop() {
 	if currLevel != stopped && RootSink != nil {
-		RootSink(currTime, currLevel, currDomain, eol)
+		RootSink(currTime, currLevel, domainChain(), eol)
 	}
 	currLevel = stopped
 }
@@ -61,7 +82,7 @@ func WantLevel(lvl Level, domain string) {
 // Append adds []byte content to current level
 func Append(msg []byte) {
 	if currLevel != stopped && RootSink != nil {
-		RootSink(currTime, currLevel, currDomain, msg)
+		RootSink(currTime, currLevel, domainChain(), msg)
 	}
 }
 

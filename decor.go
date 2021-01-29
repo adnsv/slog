@@ -2,16 +2,17 @@ package slog
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/adnsv/slog/ansi"
 )
 
 // DecorProvider is an abstract callback that implements formatting of a messages
-type DecorProvider = func(ts time.Time, lvl Level, domain string, front bool) []byte
+type DecorProvider = func(ts time.Time, lvl Level, domains []string, front bool) []byte
 
 // BracketedDecorator implements a simple `timestamp [level:domain] ` prefix for message formatting
-func BracketedDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string, front bool) []byte {
+func BracketedDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 
 	l := map[Level]string{}
 	ld := map[Level]string{}
@@ -26,15 +27,17 @@ func BracketedDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain strin
 		ld[lv] = tss + "[" + ln + ":" + "%s] "
 	}
 
+	ds := ":" // domain separator
+
 	if tsf&(TSDate|TSTime) != 0 {
 		// with timestamp
-		return func(ts time.Time, lvl Level, domain string, front bool) []byte {
+		return func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 			if !front {
 				return nil
 			}
-			if len(domain) > 0 {
+			if len(domains) > 0 {
 				if f := ld[lvl]; len(f) > 0 {
-					return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf), domain))
+					return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf), strings.Join(domains, ds)))
 				}
 			} else if f := l[lvl]; len(f) > 0 {
 				return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf)))
@@ -43,13 +46,13 @@ func BracketedDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain strin
 		}
 	}
 	// without timestamp
-	return func(ts time.Time, lvl Level, domain string, front bool) []byte {
+	return func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 		if !front {
 			return nil
 		}
-		if len(domain) > 0 {
+		if len(domains) > 0 {
 			if f := ld[lvl]; len(f) > 0 {
-				return []byte(fmt.Sprintf(f, domain))
+				return []byte(fmt.Sprintf(f, strings.Join(domains, ds)))
 			}
 		} else if f := l[lvl]; len(f) > 0 {
 			return []byte(f)
@@ -59,7 +62,7 @@ func BracketedDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain strin
 }
 
 // ColoredDecorator implements message formatting with ansi terminal colors
-func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string, front bool) []byte {
+func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 
 	l := map[Level]string{}
 	ld := map[Level]string{}
@@ -70,6 +73,8 @@ func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string,
 		tss = ansi.FgSeq(cptime.fg) + ansi.BgSeq(cptime.bg) + " %s "
 	}
 
+	ds := ":" // domain separator
+
 	for lv, cp := range cplevel {
 		l[lv] = tss + ansi.FgSeq(cp.fg) + ansi.BgSeq(cp.bg) + " " + LevelNames[lv] + " " + ansi.ResetSeq + " "
 		ld[lv] = tss + ansi.FgSeq(cp.fg) + ansi.BgSeq(cp.bg) + " " + LevelNames[lv] + " " + dss + ansi.ResetSeq + " "
@@ -77,13 +82,13 @@ func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string,
 
 	if tsf&(TSDate|TSTime) != 0 {
 		// with timestamp
-		return func(ts time.Time, lvl Level, domain string, front bool) []byte {
+		return func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 			if !front {
 				return nil
 			}
-			if len(domain) > 0 {
+			if len(domains) > 0 {
 				if f := ld[lvl]; len(f) > 0 {
-					return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf), domain))
+					return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf), strings.Join(domains, ds)))
 				}
 			} else if f := l[lvl]; len(f) > 0 {
 				return []byte(fmt.Sprintf(f, FormatTimestamp(ts, tsf)))
@@ -92,13 +97,13 @@ func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domain string,
 		}
 	}
 	// without timestamp
-	return func(ts time.Time, lvl Level, domain string, front bool) []byte {
+	return func(ts time.Time, lvl Level, domains []string, front bool) []byte {
 		if !front {
 			return nil
 		}
-		if len(domain) > 0 {
+		if len(domains) > 0 {
 			if f := ld[lvl]; len(f) > 0 {
-				return []byte(fmt.Sprintf(f, domain))
+				return []byte(fmt.Sprintf(f, strings.Join(domains, ds)))
 			}
 		} else if f := l[lvl]; len(f) > 0 {
 			return []byte(f)

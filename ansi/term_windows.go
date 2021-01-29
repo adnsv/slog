@@ -16,7 +16,12 @@ var (
 	cEnableVirtualTerminalProcessing = uint32(0x4)
 )
 
-func EnableVT(f *os.File) (bool, func()) {
+// EnableVT tries to enable VT support on windows console
+//
+// Use the returned cleanup function to restore the console back to
+// original mode
+//
+func EnableVT(f *os.File) (ok bool, cleanup func()) {
 	fd := f.Fd()
 
 	var mode uint32

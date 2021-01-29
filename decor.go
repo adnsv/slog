@@ -115,7 +115,7 @@ func ColoredDecorator(tsf TSFormat) func(ts time.Time, lvl Level, domains []stri
 type cpair struct{ fg, bg ansi.Index }
 
 var cptime = cpair{fg: ansi.Gray(128), bg: ansi.Gray(48)}
-var cpdomain = cpair{fg: ansi.Gray(192), bg: ansi.RGB(64, 64, 96)}
+var cpdomain = cpair{fg: ansi.Gray(192), bg: ansi.RGB(32, 32, 32)}
 
 var cplevel = map[Level]cpair{
 	TraceLevel: {fg: ansi.Gray(96), bg: ansi.RGB(32, 32, 48)},

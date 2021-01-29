@@ -113,10 +113,10 @@ var cptime = cpair{fg: ansi.Gray(128), bg: ansi.Gray(48)}
 var cpdomain = cpair{fg: ansi.Gray(192), bg: ansi.RGB(64, 64, 96)}
 
 var cplevel = map[Level]cpair{
-	TraceLevel: cpair{fg: ansi.Gray(96), bg: ansi.RGB(32, 32, 48)},
-	DebugLevel: cpair{fg: ansi.Gray(96), bg: ansi.RGB(72, 32, 64)},
-	InfoLevel:  cpair{fg: ansi.Gray(240), bg: ansi.RGB(64, 64, 96)},
-	WarnLevel:  cpair{fg: ansi.Gray(240), bg: ansi.RGB(128, 128, 64)},
-	ErrorLevel: cpair{fg: ansi.Gray(240), bg: ansi.RGB(128, 64, 64)},
-	FatalLevel: cpair{fg: ansi.Gray(240), bg: ansi.RGB(128, 32, 32)},
+	TraceLevel: {fg: ansi.Gray(96), bg: ansi.RGB(32, 32, 48)},
+	DebugLevel: {fg: ansi.Gray(96), bg: ansi.RGB(72, 32, 64)},
+	InfoLevel:  {fg: ansi.Gray(240), bg: ansi.RGB(64, 64, 96)},
+	WarnLevel:  {fg: ansi.Gray(240), bg: ansi.RGB(128, 128, 64)},
+	ErrorLevel: {fg: ansi.Gray(240), bg: ansi.RGB(128, 64, 64)},
+	FatalLevel: {fg: ansi.Gray(240), bg: ansi.RGB(128, 32, 32)},
 }

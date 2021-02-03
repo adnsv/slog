@@ -51,19 +51,25 @@ func domainChain() []string {
 	return append(domains, currDomain)
 }
 
-// Stop finalizes the last logging entry and disables further logging.
+// Flush finalizes the last logging entry.
 // Normally, this means writing a pending EOL into the output sink.
 // This function must be called at the end of the application
-func Stop() {
+func Flush() {
 	if currLevel != stopped && RootSink != nil {
 		RootSink(currTime, currLevel, domainChain(), eol)
 	}
 	currLevel = stopped
 }
 
+// Stop is replaced with Flush
+// Deprecated: use Flush() instead
+func Stop() {
+	Flush()
+}
+
 // StartLevel starts a new line that targets the specified logging level and domain
 func StartLevel(lvl Level, domain string) {
-	Stop()
+	Flush()
 	currTime = time.Now()
 	currLevel = lvl
 	currDomain = domain
@@ -72,7 +78,7 @@ func StartLevel(lvl Level, domain string) {
 // WantLevel starts a new level/domain line if it differs from the current
 func WantLevel(lvl Level, domain string) {
 	if currLevel != lvl || currDomain != domain {
-		Stop()
+		Flush()
 		currTime = time.Now()
 		currLevel = lvl
 		currDomain = domain
@@ -239,54 +245,36 @@ func DomainFatalf(domain string, format string, a ...interface{}) {
 
 // stream adapters
 
-type funcWriterAdapter func(p []byte)
+type appendWriter struct {
+}
 
-func (fw funcWriterAdapter) Write(p []byte) (n int, err error) {
-	n = len(p)
-	if fw != nil {
-		fw(p)
+func (w *appendWriter) Write(p []byte) (n int, err error) {
+	Append(p)
+	return len(p), nil
+}
+
+type teeWriter struct {
+	output io.Writer
+}
+
+func (t *teeWriter) Write(p []byte) (n int, err error) {
+	Append(p)
+	if t.output != nil {
+		return t.output.Write(p)
 	}
-	return
+	return len(p), nil
 }
 
-// LevelWriter produces an io.Writer that can be used for streaming
+// Writer produces an io.Writer that can be used for streaming
 // into logs
-func LevelWriter(lvl Level, domain string) io.Writer {
+func Writer(lvl Level, domain string) io.Writer {
 	StartLevel(lvl, domain)
-	return funcWriterAdapter(Append)
+	return &appendWriter{}
 }
 
-// Writer produces an io.Writer that appends to the current level
-func Writer() io.Writer {
-	return funcWriterAdapter(Append)
-}
-
-func TraceWriter(domain string) io.Writer {
-	StartLevel(TraceLevel, domain)
-	return Writer()
-}
-
-func DebugWriter(domain string) io.Writer {
-	StartLevel(DebugLevel, domain)
-	return Writer()
-}
-
-func InfoWriter(domain string) io.Writer {
-	StartLevel(InfoLevel, domain)
-	return Writer()
-}
-
-func WarnWriter(domain string) io.Writer {
-	StartLevel(WarnLevel, domain)
-	return Writer()
-}
-
-func ErrorWriter(domain string) io.Writer {
-	StartLevel(ErrorLevel, domain)
-	return Writer()
-}
-
-func FatalWriter(domain string) io.Writer {
-	StartLevel(FatalLevel, domain)
-	return Writer()
+// TeeWriter produces an io.Writer that appends to the current level
+// and also writes to another output
+func TeeWriter(lvl Level, domain string, output io.Writer) io.Writer {
+	StartLevel(lvl, domain)
+	return &teeWriter{output: output}
 }

@@ -39,7 +39,7 @@ func Close() {
 
 // Configure configures slog output target and formatting according to the
 // specified options
-func Configure(opt Options) {
+func Configure(opt *Options) {
 	Close()
 
 	output := opt.Output

@@ -88,6 +88,7 @@ func WantLevel(lvl Level, domain string) {
 // Append adds []byte content to current level
 func Append(msg []byte) {
 	if currLevel != stopped && RootSink != nil {
+		currTime = time.Now()
 		RootSink(currTime, currLevel, domainChain(), msg)
 	}
 }
